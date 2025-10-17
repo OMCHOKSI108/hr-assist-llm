@@ -3,7 +3,7 @@
 <head>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>Sans AI - Professional Chat Interface</title>
+    <title>TalentScout AI - Professional Chat Interface</title>
     <link rel='preconnect' href='https://fonts.googleapis.com'>
     <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
     <link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' rel='stylesheet'>
@@ -63,17 +63,19 @@
         .header {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
+            padding: 0.625rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: var(--shadow-sm);
+            min-height: 48px;
         }
 
         .header h1 {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             font-weight: 600;
             color: var(--text-primary);
+            line-height: 1.2;
         }
 
         .header .status {
@@ -96,6 +98,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative; /* allow positioning input container at the bottom */
         }
 
         .messages {
@@ -105,6 +108,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            padding-bottom: 140px; /* ensure messages are not hidden behind the fixed input area */
         }
 
         .message {
@@ -139,28 +143,41 @@
         .input-container {
             background: var(--bg-secondary);
             border-top: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
+            padding: 1rem 1.5rem 1.25rem;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.04);
+            z-index: 999; /* ensure input is above messages */
+            width: 100%;
         }
 
         .input-group {
             display: flex;
-            gap: 0.75rem;
-            align-items: flex-end;
+            gap: 0.875rem;
+            align-items: center;
+            width: 100%;
+            max-width: 100%;
         }
 
         .message-input {
             flex: 1;
-            min-height: 44px;
+            min-height: 48px;
             max-height: 120px;
-            padding: 0.75rem 1rem;
+            padding: 0.875rem 1rem;
             border: 2px solid var(--border-color);
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius-lg);
             background: var(--bg-primary);
             color: var(--text-primary);
-            font-size: 0.875rem;
+            font-size: 0.9375rem;
             resize: none;
             outline: none;
             transition: var(--transition);
+            font-family: inherit;
+            width: 100%;
+            min-width: 0;
+            line-height: 1.5;
         }
 
         .message-input:focus {
@@ -169,29 +186,84 @@
         }
 
         .send-button {
-            padding: 0.75rem 1.5rem;
+            padding: 0;
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
             border: none;
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius-lg);
             font-weight: 500;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            min-height: 44px;
+            height: 48px;
+            min-width: 48px;
+            padding: 0 1.25rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+            font-size: 0.9375rem;
+            letter-spacing: 0.01em;
         }
 
-        .send-button:hover {
+        .send-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .send-button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .send-button:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
         }
 
         .send-button:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+        }
+        
+        .send-button-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .send-button svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.25s ease;
+        }
+        
+        .send-button:hover:not(:disabled) svg {
+            transform: translateX(2px) scale(1.05);
+        }
+        
+        .send-button:disabled svg {
+            opacity: 0.8;
         }
 
         .typing-indicator {
@@ -242,7 +314,12 @@
 
         @media (max-width: 768px) {
             .header {
-                padding: 0.75rem 1rem;
+                padding: 0.5rem 1rem;
+                min-height: 44px;
+            }
+            
+            .header h1 {
+                font-size: 1rem;
             }
 
             .messages {
@@ -250,18 +327,27 @@
             }
 
             .input-container {
-                padding: 0.75rem 1rem;
+                padding: 0.875rem 1rem;
             }
 
             .message {
                 max-width: 90%;
+            }
+            
+            .send-button-content span {
+                display: none;
+            }
+            
+            .send-button {
+                min-width: 48px;
+                padding: 0;
             }
         }
     </style>
 </head>
 <body data-theme='light'>
     <div class='header'>
-        <h1>Sans AI Assistant</h1>
+        <h1>TalentScout AI</h1>
         <div class='status'>
             <div class='status-dot'></div>
             <span>Online</span>
@@ -293,12 +379,15 @@
                     class='message-input'
                     placeholder='Type your message here... (Enter to send, Shift+Enter for new line)'
                     rows='1'
+                    autofocus
                 ></textarea>
                 <button id='send-button' class='send-button' disabled>
-                    <span>Send</span>
-                    <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
-                        <path d='M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13'/>
-                    </svg>
+                    <div class='send-button-content'>
+                        <span>Send</span>
+                        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'>
+                            <path d='M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z'/>
+                        </svg>
+                    </div>
                 </button>
             </div>
         </div>
@@ -324,6 +413,30 @@
                 this.setupEventListeners();
                 this.setupThemeListener();
                 this.autoResizeTextarea();
+                // initialize send button state
+                this.updateSendButton();
+                console.log('[TalentScout AI] ChatInterface initialized and ready');
+                console.log('[TalentScout AI] Send button initial state:', { disabled: this.sendButton.disabled });
+                console.log('[TalentScout AI] Input element:', this.messageInput);
+                console.log('[TalentScout AI] Send button element:', this.sendButton);
+                
+                // Test communication with parent
+                console.log('[TalentScout AI] Testing postMessage to parent...');
+                try {
+                    window.parent.postMessage({
+                        type: 'iframe-ready',
+                        message: 'TalentScout AI iframe loaded and ready'
+                    }, '*');
+                    console.log('[TalentScout AI] ✅ Test message sent to parent');
+                } catch (e) {
+                    console.error('[TalentScout AI] ❌ Cannot send message to parent:', e);
+                }
+                
+                // Focus input for better UX
+                setTimeout(() => {
+                    this.messageInput.focus();
+                    console.log('[TalentScout AI] Input focused');
+                }, 100);
             }
 
             setupEventListeners() {
@@ -331,20 +444,38 @@
                 this.messageInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
+                        console.log('[TalentScout AI] Enter key pressed - sending message');
                         this.sendMessage();
                     }
                 });
 
-                // Update send button state
+                // Update send button state with multiple event types for maximum compatibility
                 this.messageInput.addEventListener('input', () => {
+                    console.log('[TalentScout AI] Input event fired, value:', this.messageInput.value);
                     this.updateSendButton();
                     this.autoResizeTextarea();
                 });
 
+                this.messageInput.addEventListener('keyup', () => {
+                    console.log('[TalentScout AI] Keyup event fired, value:', this.messageInput.value);
+                    this.updateSendButton();
+                });
+                
+                // Also listen for change event as backup
+                this.messageInput.addEventListener('change', () => {
+                    console.log('[TalentScout AI] Change event fired, value:', this.messageInput.value);
+                    this.updateSendButton();
+                });
+
                 // Send button click
-                this.sendButton.addEventListener('click', () => {
+                this.sendButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('[TalentScout AI] Send button clicked');
                     this.sendMessage();
                 });
+                
+                // Log that listeners are attached
+                console.log('[TalentScout AI] All event listeners attached successfully');
             }
 
             setupThemeListener() {
@@ -357,7 +488,29 @@
 
             updateSendButton() {
                 const hasText = this.messageInput.value.trim().length > 0;
-                this.sendButton.disabled = !hasText || this.isTyping;
+                const shouldEnable = hasText && !this.isTyping;
+                const wasDisabled = this.sendButton.disabled;
+                
+                this.sendButton.disabled = !shouldEnable;
+                
+                // Always log state for debugging
+                console.log('[TalentScout AI] updateSendButton called:', {
+                    inputValue: this.messageInput.value,
+                    trimmedLength: this.messageInput.value.trim().length,
+                    hasText,
+                    isTyping: this.isTyping,
+                    shouldEnable,
+                    buttonDisabled: this.sendButton.disabled
+                });
+                
+                // Log state changes
+                if (wasDisabled !== this.sendButton.disabled) {
+                    console.log('[TalentScout AI] ⚡ Send button state CHANGED:', {
+                        disabled: this.sendButton.disabled,
+                        hasText,
+                        isTyping: this.isTyping
+                    });
+                }
             }
 
             autoResizeTextarea() {
@@ -367,8 +520,12 @@
 
             async sendMessage() {
                 const message = this.messageInput.value.trim();
-                if (!message || this.isTyping) return;
+                if (!message || this.isTyping) {
+                    console.log('[TalentScout AI] Send blocked - message empty or typing:', { message, isTyping: this.isTyping });
+                    return;
+                }
 
+                console.log('[TalentScout AI] Sending message:', message);
                 this.addMessage(message, 'user');
                 this.messageInput.value = '';
                 this.updateSendButton();
@@ -379,12 +536,13 @@
 
                 try {
                     const response = await this.callAPI(message);
+                    console.log('[TalentScout AI] Received response:', response);
                     this.hideTypingIndicator();
                     this.addMessage(response, 'assistant');
                 } catch (error) {
+                    console.error('[TalentScout AI] Chat API error:', error);
                     this.hideTypingIndicator();
                     this.showError('Failed to send message. Please try again.');
-                    console.error('Chat API error:', error);
                 }
             }
 
@@ -397,48 +555,77 @@
                     payload.session_id = this.sessionId;
                 }
 
-                const response = await fetch(${this.apiBase}/chat, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
+                console.log('[TalentScout AI] Preparing to call API with payload:', payload);
+
+                // Use postMessage to the parent Streamlit page to make the API call.
+                // This avoids CORS/cross-origin issues within the iframe.
+                return new Promise((resolve, reject) => {
+                    const requestId = 'req_' + Date.now() + '_' + Math.random();
+                    
+                    console.log('[TalentScout AI] Generated request ID:', requestId);
+                    console.log('[TalentScout AI] Sending postMessage to parent');
+                    
+                    // Send request to parent
+                    window.parent.postMessage({
+                        type: 'chat-request',
+                        requestId: requestId,
+                        payload: payload
+                    }, '*');
+                    
+                    console.log('[TalentScout AI] postMessage sent, waiting for response...');
+                    
+                    // Listen for response
+                    const handler = (event) => {
+                        console.log('[TalentScout AI] Received message event:', event.data);
+                        
+                        if (event.data && event.data.type === 'chat-response' && event.data.requestId === requestId) {
+                            console.log('[TalentScout AI] ✅ Matched response for request:', requestId);
+                            window.removeEventListener('message', handler);
+                            
+                            if (event.data.error) {
+                                console.error('[TalentScout AI] ❌ Response contains error:', event.data.error);
+                                reject(new Error(event.data.error));
+                            } else {
+                                console.log('[TalentScout AI] ✅ Response received:', event.data.response);
+                                // Store session ID for future requests
+                                if (event.data.sessionId) {
+                                    this.sessionId = event.data.sessionId;
+                                    console.log('[TalentScout AI] Session ID stored:', this.sessionId);
+                                }
+                                resolve(event.data.response);
+                            }
+                        }
+                    };
+                    
+                    window.addEventListener('message', handler);
+                    console.log('[TalentScout AI] Response handler attached');
+                    
+                    // Timeout after 30 seconds
+                    setTimeout(() => {
+                        console.error('[TalentScout AI] ⏰ Request timeout after 30s');
+                        window.removeEventListener('message', handler);
+                        reject(new Error('Request timeout'));
+                    }, 30000);
                 });
-
-                if (!response.ok) {
-                    throw new Error(HTTP : );
-                }
-
-                const data = await response.json();
-
-                // Store session ID for future requests
-                if (data.session_id) {
-                    this.sessionId = data.session_id;
-                }
-
-                return data.response || data.message || 'No response received';
             }
 
-            addMessage(content, type) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = message ;
-
-                const timestamp = document.createElement('div');
-                timestamp.className = 'timestamp';
-                timestamp.textContent = new Date().toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-
-                const contentDiv = document.createElement('div');
-                contentDiv.textContent = content;
-
-                messageDiv.appendChild(timestamp);
-                messageDiv.appendChild(contentDiv);
-
-                this.messagesContainer.appendChild(messageDiv);
-                this.scrollToBottom();
+            // Utility to add a message and scroll container
+            addMessage(text, who) {
+                const el = document.createElement('div');
+                el.className = 'message ' + who;
+                const ts = document.createElement('div');
+                ts.className = 'timestamp';
+                ts.textContent = new Date().toLocaleTimeString();
+                el.appendChild(ts);
+                const content = document.createElement('div');
+                content.innerHTML = text.replace(/\n/g, '<br>');
+                el.appendChild(content);
+                this.messagesContainer.appendChild(el);
+                // Scroll to bottom
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
             }
+
+            // (Removed duplicate addMessage implementation above.)
 
             showTypingIndicator() {
                 this.isTyping = true;
@@ -471,7 +658,9 @@
 
         // Initialize chat interface when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            new ChatInterface();
+            const chat = new ChatInterface();
+            // Autofocus input so user can type immediately
+            try { chat.messageInput.focus(); } catch (e) {}
         });
     </script>
 </body>

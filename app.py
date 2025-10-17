@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import requests
 import json
 import uuid
+import os
 from datetime import datetime
 from backend.config import config, feature_flags, theme_manager
 from frontend.features import ui_feature_manager
@@ -114,10 +115,34 @@ st.markdown("""
     }
 
     .main .block-container {
-        padding: var(--space-4) var(--space-6);
-        max-width: 100%;
+        padding: 0.5rem 1rem !important;
+        max-width: 100% !important;
         background: var(--bg-primary);
         margin: 0 auto;
+        width: 100% !important;
+    }
+
+    /* iframe Container - Fill available space */
+    iframe {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 750px !important;
+        border: none !important;
+        border-radius: var(--radius-lg) !important;
+        box-shadow: var(--shadow-md) !important;
+        display: block !important;
+    }
+
+    .stIFrame {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+    }
+    
+    /* Ensure chat container takes full space */
+    div[data-testid="stVerticalBlock"] > div:has(iframe) {
+        height: 800px !important;
     }
 
     /* Professional Header */
@@ -618,13 +643,13 @@ else:
     </style>
     """, unsafe_allow_html=True)
 
-# Professional Header
-st.markdown("""
-<div class="main-header">
-    <h1 class="header-title">TalentScout AI</h1>
-    <p class="header-subtitle">Professional Hiring Assistant</p>
-</div>
-""", unsafe_allow_html=True)
+# Professional Header - HIDDEN: iframe has its own header
+# st.markdown("""
+# <div class="main-header">
+#     <h1 class="header-title">TalentScout AI</h1>
+#     <p class="header-subtitle">Professional Hiring Assistant</p>
+# </div>
+# """, unsafe_allow_html=True)
 
 # Sidebar for Progress Tracking
 with st.sidebar:
@@ -692,7 +717,6 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # Embed the same professional UI inside Streamlit
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 try:
     with open("professional_ui.html", "r", encoding="utf-8") as f:
         html = f.read()
@@ -710,13 +734,138 @@ try:
       setTimeout(window.__sendThemeToChild, 400);
     </script>
     """
-    # Fix f-string backslash issue by preparing the HTML first
-    prepared_html = html.replace('"', '&quot;').replace('\n', ' ')
+    # Prepare the HTML for inclusion in an iframe srcdoc.
+    # Prepend a small script so the embedded page has access to the API base it should call.
+    api_base = os.environ.get('API_BASE', 'http://localhost:8000')
+    api_script = f"<script>window.API_BASE = '{api_base}';</script>"
+
+    # Combine HTML and use data URL instead of srcdoc to avoid escaping issues
+    full_html = api_script + html
+    
+    # Use base64 encoding to avoid any escaping issues with JavaScript
+    import base64
+    encoded_html = base64.b64encode(full_html.encode('utf-8')).decode('utf-8')
+    
+    # Use a responsive iframe height that fits most screens; Streamlit will clip it to `height`.
+    # CRITICAL: Create iframe dynamically via JavaScript to ensure sandbox attributes work
     iframe = f"""
-    <iframe id="embedded-ui" srcdoc="{prepared_html}" style="width:100%; height:800px; border:0; border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"></iframe>
-    <script>window.API_BASE = 'http://localhost:8000';</script>
+    <div id="iframe-container"></div>
+    <script>
+      (function() {{
+        const container = document.getElementById('iframe-container');
+        const iframe = document.createElement('iframe');
+        iframe.id = 'embedded-ui';
+        iframe.src = 'data:text/html;base64,{encoded_html}';
+        iframe.sandbox.add('allow-scripts', 'allow-same-origin', 'allow-forms');
+        iframe.style.cssText = 'width:100%; height:100%; min-height:700px; border:0; border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);';
+        container.appendChild(iframe);
+        console.log('[TalentScout AI] iframe created dynamically');
+        console.log('[TalentScout AI] iframe sandbox:', iframe.sandbox);
+      }})();
+    </script>
     """
-    components.html(init_js + iframe, height=820, scrolling=True)
+
+    # Add proxy handler for iframe postMessage chat requests (avoids CORS in iframe).
+    # The iframe sends 'chat-request', we proxy it to backend and respond with 'chat-response'.
+    proxy_handler = f"""
+    <script>
+      (function() {{
+        const apiBase = '{api_base}';
+        
+        console.log('[TalentScout AI Proxy] Initializing proxy handler');
+        console.log('[TalentScout AI Proxy] API Base:', apiBase);
+        
+        // Wait for iframe to be created dynamically
+        function waitForIframe() {{
+          const iframe = document.getElementById('embedded-ui');
+          if (!iframe) {{
+            console.log('[TalentScout AI Proxy] Waiting for iframe...');
+            setTimeout(waitForIframe, 100);
+            return;
+          }}
+          
+          console.log('[TalentScout AI Proxy] iframe found:', iframe);
+          console.log('[TalentScout AI Proxy] iframe src:', iframe.src);
+          console.log('[TalentScout AI Proxy] iframe sandbox:', iframe.sandbox);
+          
+          // Test if iframe is accessible
+          setTimeout(() => {{
+            try {{
+              console.log('[TalentScout AI Proxy] iframe contentWindow:', iframe.contentWindow);
+              console.log('[TalentScout AI Proxy] Can access iframe:', !!iframe.contentWindow);
+            }} catch (e) {{
+              console.error('[TalentScout AI Proxy] Cannot access iframe:', e);
+            }}
+          }}, 1000);
+          
+          // Listen for messages immediately
+          window.addEventListener('message', function(event) {{
+            console.log('[TalentScout AI Proxy] Message received from:', event.origin);
+            console.log('[TalentScout AI Proxy] Message data:', event.data);
+            
+            // Listen for chat requests from iframe
+            if (event.data && event.data.type === 'chat-request') {{
+              const requestId = event.data.requestId;
+              const payload = event.data.payload;
+              
+              console.log('[TalentScout AI Proxy] Chat request:', requestId, payload);
+              
+              // Proxy the chat request to the backend
+              fetch(apiBase + '/chat', {{
+                method: 'POST',
+                headers: {{'Content-Type': 'application/json'}},
+                body: JSON.stringify(payload)
+              }})
+              .then(r => {{
+                console.log('[TalentScout AI Proxy] Fetch response status:', r.status);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+              }})
+              .then(data => {{
+                console.log('[TalentScout AI Proxy] Backend response:', data);
+                // Send response back to iframe
+                const currentIframe = document.getElementById('embedded-ui');
+                if (currentIframe && currentIframe.contentWindow) {{
+                  currentIframe.contentWindow.postMessage({{
+                    type: 'chat-response',
+                    requestId: requestId,
+                    response: data.response || data.message || 'No response',
+                    sessionId: data.session_id
+                  }}, '*');
+                  console.log('[TalentScout AI Proxy] Response sent back to iframe');
+                }} else {{
+                  console.error('[TalentScout AI Proxy] Cannot send response - iframe not accessible');
+                }}
+              }})
+              .catch(err => {{
+                console.error('[TalentScout AI Proxy] Error:', err);
+                const currentIframe = document.getElementById('embedded-ui');
+                if (currentIframe && currentIframe.contentWindow) {{
+                  currentIframe.contentWindow.postMessage({{
+                    type: 'chat-response',
+                    requestId: requestId,
+                    error: 'Failed to reach backend: ' + err.message
+                  }}, '*');
+                }}
+              }});
+            }}
+          }});
+          
+          console.log('[TalentScout AI Proxy] Proxy handler ready');
+        }}
+        
+        // Start waiting for iframe
+        waitForIframe();
+      }})();
+    </script>
+    """
+
+    # Render the init JavaScript, proxy handler, and iframe. Let the iframe handle scrolling internally.
+    components.html(init_js + proxy_handler + iframe, height=800, scrolling=False)
+except FileNotFoundError as e:
+    st.error(f"❌ Professional UI file not found: {e}")
 except Exception as e:
-    st.error(f"Failed to embed UI: {e}")
+    st.error(f"❌ Failed to embed UI: {e}")
+    import traceback
+    st.write(traceback.format_exc())
 

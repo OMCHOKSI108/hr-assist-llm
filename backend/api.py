@@ -11,6 +11,7 @@ import re
 import random
 from sqlalchemy.orm.attributes import flag_modified
 from backend.config import config, feature_flags
+from datetime import datetime
 
 # High-level question bank for different roles and experience levels
 QUESTION_BANK = {
@@ -251,7 +252,7 @@ def generate_natural_response(prompt: str, max_tokens: int = 100, fallback: str 
             messages=[
                 {
                     "role": "system",
-                    "content": "You are TalentScout, a professional AI hiring assistant. Your job is to ASK questions, not answer them. Keep responses brief (1-2 sentences), natural, and engaging. Always ASK the candidate questions - never provide answers or solutions. Be warm and encouraging while gathering information."
+                    "content": "You are TalentScout, a professional AI hiring assistant for technical recruitment. Your ONLY purpose is to conduct job interviews and assess candidates' professional qualifications.\n\nSTRICT RULES:\n1. ONLY discuss: work experience, technical skills, education, career goals, projects, professional background\n2. If user mentions personal topics (relationships, family, hobbies unrelated to work), politely redirect: 'I'm here to focus on your professional background. Let's talk about your career experience...'\n3. Your job is to ASK questions, not answer them\n4. Keep responses brief (1-2 sentences), natural, and engaging\n5. Never provide solutions or technical answers - you're interviewing, not teaching\n6. Stay warm and encouraging while gathering professional information"
                 },
                 {
                     "role": "user",
@@ -417,4 +418,9 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
+@app.get("/api/health")
+def health_check():
+    """Health check endpoint for container monitoring"""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
