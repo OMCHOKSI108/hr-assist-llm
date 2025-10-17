@@ -710,8 +710,10 @@ try:
       setTimeout(window.__sendThemeToChild, 400);
     </script>
     """
+    # Fix f-string backslash issue by preparing the HTML first
+    prepared_html = html.replace('"', '&quot;').replace('\n', ' ')
     iframe = f"""
-    <iframe id="embedded-ui" srcdoc="{html.replace('"', '&quot;').replace('\n', ' ')}" style="width:100%; height:800px; border:0; border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"></iframe>
+    <iframe id="embedded-ui" srcdoc="{prepared_html}" style="width:100%; height:800px; border:0; border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"></iframe>
     <script>window.API_BASE = 'http://localhost:8000';</script>
     """
     components.html(init_js + iframe, height=820, scrolling=True)
