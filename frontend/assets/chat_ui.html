@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentScout AI - Professional Chat Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light theme variables */
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --transition: all 0.2s ease;
+        }
+
+        [data-theme='dark'] {
+            /* Dark theme variables */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #475569;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+
+        .chat-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-info h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .header-info p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-lg);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            opacity: 0.7;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #messageInput {
+            width: 100%;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.875rem;
+            resize: vertical;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        #messageInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        #messageInput::placeholder {
+            color: var(--text-muted);
+        }
+
+        #sendButton {
+            min-width: 80px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 1rem;
+            max-width: 70%;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
+            40% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .error-message {
+            background: var(--error-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .header-info h1 {
+                font-size: 1.125rem;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .chat-input-container {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="chat-header">
+        <div class="header-info">
+            <h1>🎯 TalentScout AI</h1>
+            <p>Professional Hiring Assistant</p>
+        </div>
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>Online</span>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="messages">
+            <div class="message assistant">
+                <div class="message-content">
+                    <strong>TalentScout AI:</strong> Hello! I'm your professional hiring assistant. I'm here to conduct a comprehensive interview to assess your qualifications and experience. Let's start with your name - what should I call you?
+                    <div class="message-meta">Just now</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Type your message..." 
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button id="sendButton" disabled>
+                    <span>Send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatInterface {
+            constructor() {
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.messagesContainer = document.getElementById('messages');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                
+                this.isTyping = false;
+                this.apiBase = window.API_BASE || 'http://localhost:8000';
+                this.sessionId = window.SESSION_ID || '';
+                
+                this.init();
+            }
+
+            init() {
+                console.log('[TalentScout AI] Initializing chat interface');
+                
+                // Event listeners
+                this.messageInput.addEventListener('input', () => this.updateSendButton());
+                this.messageInput.addEventListener('keypress', (e) => this.handleKeyPress(e));
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                
+                // Theme listener
+                this.setupThemeListener();
+                
+                // Auto-resize textarea
+                this.setupAutoResize();
+                
+                this.updateSendButton();
+            }
+
+            setupThemeListener() {
+                window.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'set-theme') {
+                        document.body.setAttribute('data-theme', event.data.theme);
+                        console.log('[TalentScout AI] Theme updated to:', event.data.theme);
+                    }
+                });
+            }
+
+            setupAutoResize() {
+                this.messageInput.addEventListener('input', () => {
+                    this.messageInput.style.height = 'auto';
+                    this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
+                });
+            }
+
+            updateSendButton() {
+                const hasText = this.messageInput.value.trim().length > 0;
+                const shouldEnable = hasText && !this.isTyping;
+                
+                this.sendButton.disabled = !shouldEnable;
+                
+                console.log('[TalentScout AI] Send button state:', {
+                    hasText,
+                    isTyping: this.isTyping,
+                    enabled: shouldEnable
+                });
+            }
+
+            handleKeyPress(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    if (!this.sendButton.disabled) {
+                        this.sendMessage();
+                    }
+                }
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || this.isTyping) return;
+
+                console.log('[TalentScout AI] Sending message:', message);
+
+                // Add user message to UI
+                this.addMessage('user', message);
+                
+                // Clear input and disable button
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+                this.updateSendButton();
+
+                // Show typing indicator
+                this.showTyping();
+
+                try {
+                    // Send to backend
+                    const response = await this.callAPI(message);
+                    
+                    if (response.success) {
+                        this.addMessage('assistant', response.response);
+                    } else {
+                        this.showError(response.error || 'Failed to get response');
+                    }
+                } catch (error) {
+                    console.error('[TalentScout AI] Error:', error);
+                    this.showError('Connection error. Please try again.');
+                } finally {
+                    this.hideTyping();
+                }
+            }
+
+            async callAPI(message) {
+                console.log('[TalentScout AI] Calling API with message:', message);
+                
+                const payload = {
+                    user_input: message,
+                    session_id: this.sessionId
+                };
+
+                try {
+                    const response = await fetch(`${this.apiBase}/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('[TalentScout AI] API response:', data);
+
+                    return {
+                        success: true,
+                        response: data.response || 'No response received',
+                        session_id: data.session_id
+                    };
+
+                } catch (error) {
+                    console.error('[TalentScout AI] API call failed:', error);
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+
+            addMessage(role, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                
+                const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const sender = role === 'user' ? 'You' : 'TalentScout AI';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <strong>${sender}:</strong> ${content}
+                        <div class="message-meta">${now}</div>
+                    </div>
+                `;
+                
+                this.messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            showTyping() {
+                this.isTyping = true;
+                this.typingIndicator.style.display = 'block';
+                this.updateSendButton();
+                this.scrollToBottom();
+            }
+
+            hideTyping() {
+                this.isTyping = false;
+                this.typingIndicator.style.display = 'none';
+                this.updateSendButton();
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `Error: ${message}`;
+                this.messagesContainer.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+        }
+
+        // Initialize chat interface when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatInterface();
+        });
+    </script>
+</body>
+</html>

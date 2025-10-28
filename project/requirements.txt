@@ -2,7 +2,7 @@ streamlit
 fastapi
 uvicorn
 sqlalchemy
-psycopg2-binary
+psycopg2-binary==2.9.9
 groq
 python-dotenv
 requests

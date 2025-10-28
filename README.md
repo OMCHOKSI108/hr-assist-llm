@@ -1,6 +1,6 @@
-# sans AI — Professional Talent Scout Assistant
+# TalentScout AI — Professional Hiring Assistant
 
-sans AI is an enterprise-grade HR assistant powered by Large Language Models (LLMs) designed to streamline candidate screening, interview preparation, and talent acquisition processes. Built with modern AI capabilities and professional-grade security standards.
+TalentScout AI is an enterprise-grade HR assistant powered by Large Language Models (LLMs) designed to streamline candidate screening, interview preparation, and talent acquisition processes. Built with modern AI capabilities and professional-grade security standards.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ sans AI is an enterprise-grade HR assistant powered by Large Language Models (LL
 
 ## Overview
 
-sans AI transforms traditional HR recruitment workflows by providing intelligent automation for:
+TalentScout AI transforms traditional HR recruitment workflows by providing intelligent automation for:
 - Candidate resume analysis and scoring
 - Interview question generation
 - Skills assessment and gap analysis
@@ -112,10 +112,10 @@ cp config.py.example config.py
 notepad config.py  # or your preferred editor
 
 # Start the API server
-python app.py
+python -m backend.api
 
 # In another terminal, start the frontend
-streamlit run professional_ui.py
+streamlit run frontend/app.py
 ```
 
 ### Option 3: Using PyProject.toml
@@ -328,7 +328,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```powershell
 # Deploy to Azure Container Apps
 az containerapp up \
-  --name sans-ai-hr-assist \
+  --name talentscout-ai-hr-assist \
   --source . \
   --resource-group your-resource-group \
   --environment your-environment
@@ -340,9 +340,9 @@ az containerapp up \
 # Build and push to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin your-account.dkr.ecr.us-east-1.amazonaws.com
 
-docker build -t sans-ai-hr-assist .
-docker tag sans-ai-hr-assist:latest your-account.dkr.ecr.us-east-1.amazonaws.com/sans-ai-hr-assist:latest
-docker push your-account.dkr.ecr.us-east-1.amazonaws.com/sans-ai-hr-assist:latest
+docker build -t talentscout-ai-hr-assist .
+docker tag talentscout-ai-hr-assist:latest your-account.dkr.ecr.us-east-1.amazonaws.com/talentscout-ai-hr-assist:latest
+docker push your-account.dkr.ecr.us-east-1.amazonaws.com/talentscout-ai-hr-assist:latest
 
 # Deploy to ECS (configure task definition and service)
 ```
@@ -351,9 +351,9 @@ docker push your-account.dkr.ecr.us-east-1.amazonaws.com/sans-ai-hr-assist:lates
 
 ```powershell
 # Build and deploy to Cloud Run
-gcloud builds submit --tag gcr.io/your-project/sans-ai-hr-assist
-gcloud run deploy sans-ai-hr-assist \
-  --image gcr.io/your-project/sans-ai-hr-assist \
+gcloud builds submit --tag gcr.io/your-project/talentscout-ai-hr-assist
+gcloud run deploy talentscout-ai-hr-assist \
+  --image gcr.io/your-project/talentscout-ai-hr-assist \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated
@@ -367,6 +367,14 @@ gcloud run deploy sans-ai-hr-assist \
 - **Monitoring**: Set up application performance monitoring
 
 ## Screenshots
+
+### Frontend Interface
+![Frontend Interface](docs/images/frontend.png)
+*Professional TalentScout AI interface showing the chat system, theme toggle, and interview progress tracking*
+
+### Backend API
+![Backend API](docs/images/backend.png)
+*FastAPI backend service running and providing API endpoints for the HR assistant*
 
 ### Main Dashboard
 ![Main Dashboard](assets/images/dashboard.png)
@@ -394,23 +402,34 @@ gcloud run deploy sans-ai-hr-assist \
 
 ```
 hr-assist-llm/
-├── api.py                 # FastAPI application
-├── app.py                 # Main application entry point
-├── config.py              # Configuration management
-├── config_manager.py      # Configuration utilities
-├── features.py            # Core business logic
-├── models.py              # Data models and schemas
-├── professional_ui.py     # Streamlit frontend
-├── requirements.txt       # Python dependencies
-├── pyproject.toml         # Modern Python packaging
-├── docker-compose.yml     # Docker services
-├── Dockerfile            # Container definition
-├── mkdocs.yml            # Documentation configuration
-├── docs/                 # Documentation files
-├── assets/               # Static assets and screenshots
+├── main.py               # Main application entry point
+├── backend/              # Backend API and services
+│   ├── api.py           # FastAPI application
+│   ├── config.py        # Configuration management
+│   ├── models.py        # Data models and schemas
+│   └── __init__.py
+├── frontend/             # Frontend interface
+│   ├── app.py           # Main Streamlit application
+│   ├── components/      # Reusable UI components
+│   │   ├── api_service.py
+│   │   ├── chat_interface.py
+│   │   ├── theme_manager.py
+│   │   └── __init__.py
+│   ├── assets/          # Static assets
+│   │   └── chat_ui.html
+│   └── styles/          # CSS stylesheets
+├── docs/                # Documentation files
 │   ├── images/          # Screenshots and graphics
-│   └── snapshots/       # HTML snapshots
-└── .github/             # GitHub Actions workflows
+│   ├── api.md           # API documentation
+│   └── screenshots.md   # Visual documentation
+├── project/             # Project configuration
+│   └── requirements.txt # Python dependencies
+├── scripts/             # Deployment scripts
+│   └── run.sh          # Docker startup script
+├── docker-compose.yml   # Docker services
+├── Dockerfile          # Container definition
+├── mkdocs.yml          # Documentation configuration
+└── .github/            # GitHub Actions workflows
     └── workflows/
 ```
 
@@ -428,7 +447,7 @@ flake8
 black .
 
 # Start development servers
-python app.py & streamlit run professional_ui.py
+python -m backend.api & streamlit run frontend/app.py
 ```
 
 ### Testing
@@ -456,7 +475,7 @@ pytest tests/integration/
 
 ## Contributing
 
-We welcome contributions to sans AI! Please follow these guidelines:
+We welcome contributions to TalentScout AI! Please follow these guidelines:
 
 ### Development Process
 

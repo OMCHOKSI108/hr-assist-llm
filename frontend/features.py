@@ -3,7 +3,7 @@ Feature Flag Management System
 Advanced feature toggle system for controlled feature rollout and A/B testing
 """
 from typing import Dict, Any, Optional
-from config import config, feature_flags
+from backend.config import config, feature_flags
 import streamlit as st
 
 class FeatureManager:
