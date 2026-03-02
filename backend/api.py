@@ -333,7 +333,7 @@ def is_valid_name(text: str) -> bool:
     if len(words) == 1:
         # If it's a longer name (6+ chars) and contains only letters, likely a valid single name
         if len(name) >= 6 and name.isalpha():
-            return True  # Valid single name (like "Sanskruti", "Alexander", etc.)
+            return True  # Valid single name (like "pentagon", "Alexander", etc.)
         # Shorter single names need confirmation
         elif len(name) >= 3:
             return None  # Ambiguous - ask for confirmation
